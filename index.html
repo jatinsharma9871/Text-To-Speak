@@ -98,13 +98,18 @@
 
     function checkMessage() {
       const data = JSON.parse(localStorage.getItem('site_message'));
-      if (data && Date.now() < data.expiresAt) {
+      const now = Date.now();
+      if (data && now >= data.startAt && now < data.expiresAt) {
         if (data.message !== lastMessage) {
           lastMessage = data.message;
           displayEl.textContent = lastMessage;
           repeatMessage(lastMessage);
         }
         updateCountdown(data.expiresAt);
+      } else if (now < (data?.startAt || 0)) {
+        displayEl.textContent = "Message is scheduled. Please wait...";
+        countdownEl.textContent = "";
+        lastMessage = "";
       } else {
         displayEl.textContent = "No message available at this time.";
         countdownEl.textContent = "";
