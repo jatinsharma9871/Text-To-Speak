@@ -16,9 +16,12 @@
 
   <script>
     function saveMessage() {
-      const message = document.getElementById('adminMessage').value;
-      const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes from now
-      localStorage.setItem('site_message', '{"message":"new","expiresAt":1744783934647}');
+      const msg = {
+  message: "This is the updated message!",
+  expiresAt: Date.now() + 15 * 60 * 1000 // 15 minutes from now
+};
+localStorage.setItem('site_message', JSON.stringify(msg));
+
 
       alert('Message saved for 15 minutes!');
     }
