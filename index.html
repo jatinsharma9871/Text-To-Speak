@@ -52,11 +52,10 @@
     let messagePlaying = false;
     let speechAllowed = false;
 
-    // Enable speech synthesis after first user interaction
     document.body.addEventListener('click', () => {
       speechAllowed = true;
       displayEl.textContent = "Waiting for message...";
-      checkMessage(); // run once immediately
+      checkMessage();
     }, { once: true });
 
     function speakMessage(msg) {
@@ -81,47 +80,41 @@
       play();
     }
 
-    function updateCountdown(expiresAt) {
-      const now = Date.now();
-      const remaining = expiresAt - now;
-      if (remaining <= 0) {
-        displayEl.textContent = "Message expired.";
-        countdownEl.textContent = "";
-        localStorage.removeItem('site_message');
-        lastMessage = "";
-        return;
-      }
-      const mins = Math.floor(remaining / 60000);
-      const secs = Math.floor((remaining % 60000) / 1000);
-      countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
+    function formatTime(ms) {
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      return `${mins}m ${secs}s`;
     }
 
     function checkMessage() {
       const data = JSON.parse(localStorage.getItem('site_message'));
       const now = Date.now();
+
       if (data && now >= data.startAt && now < data.expiresAt) {
+        // Active message
         if (data.message !== lastMessage) {
           lastMessage = data.message;
           displayEl.textContent = lastMessage;
           repeatMessage(lastMessage);
         }
-        updateCountdown(data.expiresAt);
-      } else if (now < (data?.startAt || 0)) {
-        displayEl.textContent = "Message is scheduled. Please wait...";
-        countdownEl.textContent = "";
+        const remaining = data.expiresAt - now;
+        countdownEl.textContent = `Message expires in ${formatTime(remaining)}`;
+      } else if (data && now < data.startAt) {
+        // Future message scheduled
+        const timeUntilStart = data.startAt - now;
+        displayEl.textContent = "Next message is scheduled.";
+        countdownEl.textContent = `Starts in ${formatTime(timeUntilStart)}`;
         lastMessage = "";
       } else {
+        // No valid message
         displayEl.textContent = "No message available at this time.";
         countdownEl.textContent = "";
         lastMessage = "";
       }
     }
 
-    // Check every 5 seconds after activation
     setInterval(() => {
-      if (speechAllowed) {
-        checkMessage();
-      }
+      if (speechAllowed) checkMessage();
     }, 5000);
   </script>
 </body>
