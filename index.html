@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Public Page</title>
   <style>
-    body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; }
+    body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; cursor: pointer; }
     #popup {
       display: none;
       position: fixed;
@@ -37,7 +37,7 @@
 <body>
   <div id="popup">
     <h2>Welcome Message</h2>
-    <p id="display">Checking message...</p>
+    <p id="display">Click anywhere to activate message audio.</p>
     <div id="countdown"></div>
   </div>
 
@@ -50,6 +50,14 @@
 
     let lastMessage = "";
     let messagePlaying = false;
+    let speechAllowed = false;
+
+    // Enable speech synthesis after first user interaction
+    document.body.addEventListener('click', () => {
+      speechAllowed = true;
+      displayEl.textContent = "Waiting for message...";
+      checkMessage(); // run once immediately
+    }, { once: true });
 
     function speakMessage(msg) {
       const utterance = new SpeechSynthesisUtterance(msg);
@@ -58,7 +66,7 @@
     }
 
     function repeatMessage(msg) {
-      if (messagePlaying) return;
+      if (messagePlaying || !speechAllowed) return;
       messagePlaying = true;
       let repeatCount = 0;
       function play() {
@@ -70,7 +78,7 @@
           messagePlaying = false;
         }
       }
-      setTimeout(play, 1000); // small delay to start
+      play();
     }
 
     function updateCountdown(expiresAt) {
@@ -80,6 +88,7 @@
         displayEl.textContent = "Message expired.";
         countdownEl.textContent = "";
         localStorage.removeItem('site_message');
+        lastMessage = "";
         return;
       }
       const mins = Math.floor(remaining / 60000);
@@ -103,8 +112,12 @@
       }
     }
 
-    checkMessage(); // initial run
-    setInterval(checkMessage, 5000); // check every 5 seconds
+    // Check every 5 seconds after activation
+    setInterval(() => {
+      if (speechAllowed) {
+        checkMessage();
+      }
+    }, 5000);
   </script>
 </body>
 </html>
