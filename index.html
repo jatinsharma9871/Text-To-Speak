@@ -15,60 +15,41 @@
   <div id="countdown"></div>
 
   <script>
-  const displayEl = document.getElementById('display');
-  const countdownEl = document.getElementById('countdown');
+    const displayEl = document.getElementById('display');
+    const countdownEl = document.getElementById('countdown');
 
-  const data = JSON.parse(localStorage.getItem('site_message'));
+    const data = JSON.parse(localStorage.getItem('site_message'));
 
-  if (data && Date.now() < data.expiresAt) {
-    const message = data.message;
-    displayEl.textContent = message;
+    if (data && Date.now() < data.expiresAt) {
+      const message = data.message;
+      displayEl.textContent = message;
 
-    // Ensure voices are loaded before speaking
-    function speakRepeatedly(msg, times = 5) {
-      let spoken = 0;
-      const speak = () => {
-        if (spoken >= times) return;
-        const utterance = new SpeechSynthesisUtterance(msg);
-        utterance.voice = speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || null;
-        utterance.onend = () => {
-          spoken++;
-          speak();
-        };
-        speechSynthesis.speak(utterance);
-      };
+      // Speak the message using speechSynthesis
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = "en-US"; // Set the language (you can change to "en-GB" or another language)
+      speechSynthesis.speak(utterance);
 
-      // Handle delayed voice loading
-      if (speechSynthesis.getVoices().length === 0) {
-        speechSynthesis.onvoiceschanged = () => speak();
-      } else {
-        speak();
+      // Countdown timer
+      function updateCountdown() {
+        const now = Date.now();
+        const remaining = data.expiresAt - now;
+        if (remaining <= 0) {
+          displayEl.textContent = "Message expired.";
+          countdownEl.textContent = "";
+          localStorage.removeItem('site_message');
+          return;
+        }
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
       }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    } else {
+      displayEl.textContent = "No active message.";
+      countdownEl.textContent = "";
     }
-
-    speakRepeatedly(message);
-
-    // Countdown timer
-    function updateCountdown() {
-      const now = Date.now();
-      const remaining = data.expiresAt - now;
-      if (remaining <= 0) {
-        displayEl.textContent = "Message expired.";
-        countdownEl.textContent = "";
-        localStorage.removeItem('site_message');
-        return;
-      }
-      const mins = Math.floor(remaining / 60000);
-      const secs = Math.floor((remaining % 60000) / 1000);
-      countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
-    }
-
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-  } else {
-    displayEl.textContent = "No active message.";
-    countdownEl.textContent = "";
-  }
   </script>
 </body>
 </html>
