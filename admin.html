@@ -4,49 +4,49 @@
   <meta charset="UTF-8">
   <title>Admin Panel</title>
   <style>
-    body { font-family: Arial; max-width: 500px; margin: 40px auto; padding: 20px; background: #f2f2f2; }
-    label { display: block; margin-top: 20px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 10px; margin-top: 5px; }
+    body { font-family: Arial; padding: 40px; background: #f2f2f2; max-width: 600px; margin: auto; }
+    label, input, textarea { display: block; width: 100%; margin-top: 10px; }
     button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
-  <h2>Admin: Set Public Message</h2>
+  <h2>Admin Panel</h2>
+  
   <label>Message:</label>
-  <textarea id="message" rows="3"></textarea>
+  <textarea id="message" rows="4" placeholder="Enter welcome message..."></textarea>
 
-  <label>Duration (minutes):</label>
-  <input type="number" id="duration" value="15" min="1">
+  <label>Start Time:</label>
+  <input type="datetime-local" id="startTime">
 
-  <label>Schedule Delay (minutes from now):</label>
-  <input type="number" id="delay" value="0" min="0">
+  <label>End Time:</label>
+  <input type="datetime-local" id="endTime">
 
-  <button onclick="saveMessage()">Set Message</button>
+  <label>Repeat Count (1–10):</label>
+  <input type="number" id="repeatCount" min="1" max="10" value="5">
 
-  <p id="status"></p>
+  <button onclick="saveMessage()">Save Message</button>
 
   <script>
     function saveMessage() {
       const message = document.getElementById('message').value.trim();
-      const duration = parseInt(document.getElementById('duration').value);
-      const delay = parseInt(document.getElementById('delay').value);
-      if (!message || duration <= 0) {
-        alert("Please enter a valid message and duration.");
+      const start = new Date(document.getElementById('startTime').value).getTime();
+      const end = new Date(document.getElementById('endTime').value).getTime();
+      const repeatCount = parseInt(document.getElementById('repeatCount').value);
+
+      if (!message || isNaN(start) || isNaN(end) || start >= end || isNaN(repeatCount)) {
+        alert("Please enter valid message, time range, and repeat count.");
         return;
       }
 
-      const now = Date.now();
-      const startAt = now + delay * 60000;
-      const expiresAt = startAt + duration * 60000;
-
       const payload = {
         message,
-        startAt,
-        expiresAt
+        startAt: start,
+        expiresAt: end,
+        repeatCount
       };
 
       localStorage.setItem('site_message', JSON.stringify(payload));
-      document.getElementById('status').textContent = "Message scheduled successfully.";
+      alert("Message saved successfully!");
     }
   </script>
 </body>
