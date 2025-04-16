@@ -4,18 +4,45 @@
   <meta charset="UTF-8">
   <title>Public Page</title>
   <style>
-    body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; cursor: pointer; }
-    #display { font-size: 24px; color: #333; margin-top: 30px; }
-    #countdown { font-size: 18px; margin-top: 10px; color: #666; }
+    body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; }
+    #popup {
+      display: none; /* Initially hidden */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 30px;
+      background-color: #fff;
+      border: 2px solid #333;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      text-align: center;
+    }
+    #popup h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+    #popup p {
+      font-size: 18px;
+      color: #666;
+    }
+    #countdown {
+      font-size: 16px;
+      margin-top: 10px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
-  <h2>Welcome Message</h2>
-  <div id="display">Checking message...</div>
-  <div id="countdown"></div>
-  <p><small>Click anywhere on the page to hear the message.</small></p>
+  <div id="popup">
+    <h2>Welcome Message</h2>
+    <p id="display">Checking message...</p>
+    <div id="countdown"></div>
+  </div>
 
   <script>
+    const popupEl = document.getElementById('popup');
     const displayEl = document.getElementById('display');
     const countdownEl = document.getElementById('countdown');
 
@@ -32,10 +59,21 @@
         speechSynthesis.speak(utterance);
       }
 
-      // Wait for user to click anywhere to trigger the speech
-      document.body.addEventListener('click', function() {
-        speakMessage(message); // Speak the message when clicked
-      });
+      // Function to repeat the message 5 times with a delay
+      let repeatCount = 0;
+      function repeatMessage() {
+        if (repeatCount < 5) {
+          speakMessage(message);
+          repeatCount++;
+          setTimeout(repeatMessage, 2000); // Delay of 2 seconds before repeating
+        }
+      }
+
+      // Show the popup immediately
+      popupEl.style.display = 'block';
+
+      // Auto play the message and repeat it 5 times
+      repeatMessage();
 
       // Countdown timer
       function updateCountdown() {
