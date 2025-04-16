@@ -9,7 +9,7 @@
   </style>
 </head>
 <body>
-  <h2>Admin Panel - Set Message</h2>
+  <h2>Admin Panel - Set Timed Message</h2>
   <input type="text" id="adminMessage" placeholder="Enter your message">
   <br>
   <button onclick="saveMessage()">Save Message</button>
@@ -17,8 +17,9 @@
   <script>
     function saveMessage() {
       const message = document.getElementById('adminMessage').value;
-      localStorage.setItem('site_message', message);
-      alert('Message saved!');
+      const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes from now
+      localStorage.setItem('site_message', JSON.stringify({ message, expiresAt }));
+      alert('Message saved for 15 minutes!');
     }
   </script>
 </body>
