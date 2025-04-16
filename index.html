@@ -13,15 +13,27 @@
   <div id="display"></div>
 
   <script>
-    const message = localStorage.getItem('site_message');
+    const data = JSON.parse(localStorage.getItem('site_message'));
 
-    if (message) {
+    if (data && Date.now() < data.expiresAt) {
+      const message = data.message;
       document.getElementById('display').textContent = message;
 
-      const utterance = new SpeechSynthesisUtterance(message);
-      speechSynthesis.speak(utterance);
+      // Speak message 5 times
+      let count = 0;
+      function speakRepeatedly() {
+        if (count < 5) {
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.onend = () => {
+            count++;
+            speakRepeatedly();
+          };
+          speechSynthesis.speak(utterance);
+        }
+      }
+      speakRepeatedly();
     } else {
-      document.getElementById('display').textContent = "No message set.";
+      document.getElementById('display').textContent = "No active message.";
     }
   </script>
 </body>
