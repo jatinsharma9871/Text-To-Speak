@@ -6,7 +6,7 @@
   <style>
     body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; }
     #popup {
-      display: none; /* Initially hidden */
+      display: none;
       position: fixed;
       top: 50%;
       left: 50%;
@@ -46,58 +46,65 @@
     const displayEl = document.getElementById('display');
     const countdownEl = document.getElementById('countdown');
 
-    const data = JSON.parse(localStorage.getItem('site_message'));
+    popupEl.style.display = 'block';
 
-    if (data && Date.now() < data.expiresAt) {
-      const message = data.message;
-      displayEl.textContent = message;
+    let lastMessage = "";
+    let messagePlaying = false;
 
-      // Function to speak the message
-      function speakMessage(msg) {
-        const utterance = new SpeechSynthesisUtterance(msg);
-        utterance.lang = "en-US"; // You can change the language
-        speechSynthesis.speak(utterance);
-      }
-
-      // Function to repeat the message 5 times with a delay
-      let repeatCount = 0;
-      function repeatMessage() {
-        if (repeatCount < 5) {
-          speakMessage(message);
-          repeatCount++;
-          setTimeout(repeatMessage, 2000); // Delay of 2 seconds before repeating
-        }
-      }
-
-      // Show the popup immediately
-      popupEl.style.display = 'block';
-
-      // Adding a slight delay before triggering the speech
-      setTimeout(function() {
-        repeatMessage(); // Auto play the message and repeat it 5 times
-      }, 1000); // Wait 1 second before starting the speech
-
-      // Countdown timer
-      function updateCountdown() {
-        const now = Date.now();
-        const remaining = data.expiresAt - now;
-        if (remaining <= 0) {
-          displayEl.textContent = "Message expired.";
-          countdownEl.textContent = "";
-          localStorage.removeItem('site_message');
-          return;
-        }
-        const mins = Math.floor(remaining / 60000);
-        const secs = Math.floor((remaining % 60000) / 1000);
-        countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
-      }
-
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    } else {
-      displayEl.textContent = "No active message.";
-      countdownEl.textContent = "";
+    function speakMessage(msg) {
+      const utterance = new SpeechSynthesisUtterance(msg);
+      utterance.lang = "en-US";
+      speechSynthesis.speak(utterance);
     }
+
+    function repeatMessage(msg) {
+      if (messagePlaying) return;
+      messagePlaying = true;
+      let repeatCount = 0;
+      function play() {
+        if (repeatCount < 5) {
+          speakMessage(msg);
+          repeatCount++;
+          setTimeout(play, 2000);
+        } else {
+          messagePlaying = false;
+        }
+      }
+      setTimeout(play, 1000); // small delay to start
+    }
+
+    function updateCountdown(expiresAt) {
+      const now = Date.now();
+      const remaining = expiresAt - now;
+      if (remaining <= 0) {
+        displayEl.textContent = "Message expired.";
+        countdownEl.textContent = "";
+        localStorage.removeItem('site_message');
+        return;
+      }
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
+    }
+
+    function checkMessage() {
+      const data = JSON.parse(localStorage.getItem('site_message'));
+      if (data && Date.now() < data.expiresAt) {
+        if (data.message !== lastMessage) {
+          lastMessage = data.message;
+          displayEl.textContent = lastMessage;
+          repeatMessage(lastMessage);
+        }
+        updateCountdown(data.expiresAt);
+      } else {
+        displayEl.textContent = "No message available at this time.";
+        countdownEl.textContent = "";
+        lastMessage = "";
+      }
+    }
+
+    checkMessage(); // initial run
+    setInterval(checkMessage, 5000); // check every 5 seconds
   </script>
 </body>
 </html>
