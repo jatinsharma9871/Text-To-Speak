@@ -4,35 +4,163 @@
   <meta charset="UTF-8">
   <title>Admin Panel</title>
   <style>
-    body { font-family: Arial; padding: 40px; background: #f2f2f2; max-width: 600px; margin: auto; }
-    label, input, textarea { display: block; width: 100%; margin-top: 10px; }
-    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    label {
+      margin-top: 15px;
+      font-weight: 600;
+    }
+
+    input, textarea {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      margin: 0 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      transition: 0.3s;
+    }
+
+    .btn-save {
+      background-color: #28a745;
+    }
+
+    .btn-save:hover {
+      background-color: #218838;
+    }
+
+    .btn-clear {
+      background-color: #dc3545;
+    }
+
+    .btn-clear:hover {
+      background-color: #c82333;
+    }
+
+    .status-box {
+      margin-top: 30px;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+    }
+
+    .status-box p {
+      margin: 6px 0;
+    }
+
+    .status-box span {
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
-  <h2>Admin Panel</h2>
-  
-  <label>Message:</label>
-  <textarea id="message" rows="4" placeholder="Enter welcome message..."></textarea>
+  <div class="container">
+    <h2>🔧 Admin Panel</h2>
 
-  <label>Start Time:</label>
-  <input type="datetime-local" id="startTime">
+    <label for="message">Welcome Message:</label>
+    <textarea id="message" rows="4" placeholder="Enter welcome message..."></textarea>
 
-  <label>End Time:</label>
-  <input type="datetime-local" id="endTime">
+    <label for="startTime">Start Time:</label>
+    <input type="datetime-local" id="startTime">
 
-  <label>Repeat Count (1–10):</label>
-  <input type="number" id="repeatCount" min="1" max="10" value="5">
+    <label for="endTime">End Time:</label>
+    <input type="datetime-local" id="endTime">
 
-  <button onclick="saveMessage()">Save Message</button>
-  <button onclick="clearMessage()">Clear Message</button>
+    <label for="repeatCount">Repeat Count (1–10):</label>
+    <input type="number" id="repeatCount" min="1" max="10" value="5">
+
+    <div class="btn-group">
+      <button class="btn-save" onclick="saveMessage()">💾 Save</button>
+      <button class="btn-clear" onclick="clearMessage()">🗑️ Clear</button>
+    </div>
+
+    <div class="status-box" id="statusBox">
+      <p><span>Status:</span> <span id="statusText">Loading...</span></p>
+      <p><span>Preview:</span> <span id="previewText">No message</span></p>
+      <p><span>Expires In:</span> <span id="expiresIn">--</span></p>
+    </div>
+  </div>
 
   <script>
-    function clearMessage() {
-      localStorage.removeItem('site_message');
-      alert("Message cleared.");
-      updateStatus();
+    function updateStatus() {
+      const statusText = document.getElementById('statusText');
+      const previewText = document.getElementById('previewText');
+      const expiresIn = document.getElementById('expiresIn');
+
+      const data = JSON.parse(localStorage.getItem('site_message'));
+      const now = Date.now();
+
+      if (!data) {
+        statusText.textContent = "No message set.";
+        previewText.textContent = "N/A";
+        expiresIn.textContent = "--";
+        return;
+      }
+
+      previewText.textContent = data.message || "No message";
+
+      if (now < data.startAt) {
+        statusText.textContent = "Scheduled (waiting)";
+        expiresIn.textContent = `Starts in ${formatCountdown(data.startAt - now)}`;
+      } else if (now >= data.startAt && now < data.expiresAt) {
+        statusText.textContent = "Active";
+        expiresIn.textContent = `Expires in ${formatCountdown(data.expiresAt - now)}`;
+      } else {
+        statusText.textContent = "Expired";
+        expiresIn.textContent = "Expired";
+      }
     }
+
+    function formatCountdown(ms) {
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      return `${mins}m ${secs}s`;
+    }
+
     function saveMessage() {
       const message = document.getElementById('message').value.trim();
       const start = new Date(document.getElementById('startTime').value).getTime();
@@ -52,8 +180,18 @@
       };
 
       localStorage.setItem('site_message', JSON.stringify(payload));
-      alert("Message saved successfully!");
+      alert("✅ Message saved successfully!");
+      updateStatus();
     }
+
+    function clearMessage() {
+      localStorage.removeItem('site_message');
+      alert("🗑️ Message cleared.");
+      updateStatus();
+    }
+
+    // Init status when page loads
+    updateStatus();
   </script>
 </body>
 </html>
