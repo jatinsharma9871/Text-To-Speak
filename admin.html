@@ -104,10 +104,10 @@
     <label for="message">Welcome Message:</label>
     <textarea id="message" rows="4" placeholder="Enter welcome message..."></textarea>
 
-    <label for="startTime">Start Time:</label>
+    <label for="startTime">Start Time (Optional):</label>
     <input type="datetime-local" id="startTime">
 
-    <label for="endTime">End Time:</label>
+    <label for="endTime">End Time (Optional):</label>
     <input type="datetime-local" id="endTime">
 
     <label for="repeatCount">Repeat Count (1–10):</label>
@@ -146,9 +146,9 @@
       if (now < data.startAt) {
         statusText.textContent = "Scheduled (waiting)";
         expiresIn.textContent = `Starts in ${formatCountdown(data.startAt - now)}`;
-      } else if (now >= data.startAt && now < data.expiresAt) {
+      } else if (now >= data.startAt && (!data.expiresAt || now < data.expiresAt)) {
         statusText.textContent = "Active";
-        expiresIn.textContent = `Expires in ${formatCountdown(data.expiresAt - now)}`;
+        expiresIn.textContent = data.expiresAt ? `Expires in ${formatCountdown(data.expiresAt - now)}` : "No expiration";
       } else {
         statusText.textContent = "Expired";
         expiresIn.textContent = "Expired";
@@ -163,19 +163,25 @@
 
     function saveMessage() {
       const message = document.getElementById('message').value.trim();
-      const start = new Date(document.getElementById('startTime').value).getTime();
-      const end = new Date(document.getElementById('endTime').value).getTime();
+      const start = document.getElementById('startTime').value ? new Date(document.getElementById('startTime').value).getTime() : Date.now(); // Default to now if no start time
+      const end = document.getElementById('endTime').value ? new Date(document.getElementById('endTime').value).getTime() : null; // No expiration if not provided
       const repeatCount = parseInt(document.getElementById('repeatCount').value);
 
-      if (!message || isNaN(start) || isNaN(end) || start >= end || isNaN(repeatCount)) {
-        alert("Please enter valid message, time range, and repeat count.");
+      if (!message || isNaN(repeatCount)) {
+        alert("Please enter valid message and repeat count.");
+        return;
+      }
+
+      // Ensure start time is before end time, if end time is provided
+      if (end && start >= end) {
+        alert("Start time must be before end time.");
         return;
       }
 
       const payload = {
         message,
         startAt: start,
-        expiresAt: end,
+        expiresAt: end, // If no end time, expiresAt will be null
         repeatCount
       };
 

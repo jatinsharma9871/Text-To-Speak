@@ -90,20 +90,26 @@
       const data = JSON.parse(localStorage.getItem('site_message'));
       const now = Date.now();
 
-      if (data && now >= data.startAt && now < data.expiresAt) {
+      if (data && now >= data.startAt && (!data.expiresAt || now < data.expiresAt)) {
         // Active message
         if (data.message !== lastMessage) {
           lastMessage = data.message;
           displayEl.textContent = lastMessage;
           repeatMessage(lastMessage);
         }
-        const remaining = data.expiresAt - now;
-        countdownEl.textContent = `Message expires in ${formatTime(remaining)}`;
+        const remaining = data.expiresAt ? data.expiresAt - now : null;
+        countdownEl.textContent = remaining ? `Message expires in ${formatTime(remaining)}` : "No expiration set";
       } else if (data && now < data.startAt) {
         // Future message scheduled
         const timeUntilStart = data.startAt - now;
-        displayEl.textContent = "Next message is scheduled.";
-        countdownEl.textContent = `Starts in ${formatTime(timeUntilStart)}`;
+        
+        if (timeUntilStart <= 60000) {
+          displayEl.textContent = "Next message is about to start!";
+          countdownEl.textContent = `Starts in less than a minute`;
+        } else {
+          displayEl.textContent = "Next message is scheduled.";
+          countdownEl.textContent = `Starts in ${formatTime(timeUntilStart)}`;
+        }
         lastMessage = "";
       } else {
         // No valid message
