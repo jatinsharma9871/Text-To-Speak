@@ -72,8 +72,10 @@
       // Show the popup immediately
       popupEl.style.display = 'block';
 
-      // Auto play the message and repeat it 5 times
-      repeatMessage();
+      // Adding a slight delay before triggering the speech
+      setTimeout(function() {
+        repeatMessage(); // Auto play the message and repeat it 5 times
+      }, 1000); // Wait 1 second before starting the speech
 
       // Countdown timer
       function updateCountdown() {
