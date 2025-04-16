@@ -6,18 +6,23 @@
   <style>
     body { font-family: Arial; padding: 40px; text-align: center; background: #f7f7f7; }
     #display { font-size: 24px; color: #333; margin-top: 30px; }
+    #countdown { font-size: 18px; margin-top: 10px; color: #666; }
   </style>
 </head>
 <body>
   <h2>Welcome Message</h2>
-  <div id="display"></div>
+  <div id="display">Checking message...</div>
+  <div id="countdown"></div>
 
   <script>
+    const displayEl = document.getElementById('display');
+    const countdownEl = document.getElementById('countdown');
+
     const data = JSON.parse(localStorage.getItem('site_message'));
 
     if (data && Date.now() < data.expiresAt) {
       const message = data.message;
-      document.getElementById('display').textContent = message;
+      displayEl.textContent = message;
 
       // Speak message 5 times
       let count = 0;
@@ -32,8 +37,27 @@
         }
       }
       speakRepeatedly();
+
+      // Countdown timer
+      function updateCountdown() {
+        const now = Date.now();
+        const remaining = data.expiresAt - now;
+        if (remaining <= 0) {
+          displayEl.textContent = "Message expired.";
+          countdownEl.textContent = "";
+          localStorage.removeItem('site_message');
+          return;
+        }
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        countdownEl.textContent = `Message expires in ${mins}m ${secs}s`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
     } else {
-      document.getElementById('display').textContent = "No active message.";
+      displayEl.textContent = "No active message.";
+      countdownEl.textContent = "";
     }
   </script>
 </body>
